@@ -37,7 +37,7 @@ async function openLong(symbol) {
             .update(params)
             .digest("hex");
 
-        const url = https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature};
+        const url = 'https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature}';
 
         const response = await axios.post(url, {}, {
             headers: {
