@@ -29,7 +29,7 @@ async function openLong(symbol) {
         const timestamp = Date.now();
         const quantity = 1;
 
-        const query = symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
+        const query = "symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
 
         const signature = crypto
             .createHmac("sha256", MEXC_SECRET_KEY)
