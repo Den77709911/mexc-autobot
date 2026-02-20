@@ -23,36 +23,38 @@ async function sendTelegram(text) {
     }
 }
 
-// ===== OPEN LONG =====
+// ===== OPEN LONG FUNCTION =====
 async function openLong(symbol) {
     try {
         const timestamp = Date.now();
-        const quantity = 1;
+        const quantity = 1; // 1 контракт для теста
 
-        const query = "symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
+        // ВАЖНО — здесь правильные обратные кавычки  
+        const params = symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
 
         const signature = crypto
             .createHmac("sha256", MEXC_SECRET_KEY)
-            .update(query)
+            .update(params)
             .digest("hex");
 
-        const url = https://contract.mexc.com/api/v1/private/order/submit?${query}&signature=${signature};
+        const url = https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature};
 
-        await axios.post(url, {}, {
+        const response = await axios.post(url, {}, {
             headers: {
                 "X-MEXC-APIKEY": MEXC_API_KEY
             }
         });
 
+        console.log("Order success:", response.data);
         await sendTelegram("✅ LONG открыт: " + symbol);
 
     } catch (err) {
-        console.log(err.response?.data || err.message);
+        console.log("Order error:", err.response?.data || err.message);
         await sendTelegram("❌ Ошибка открытия сделки");
     }
 }
 
-// ===== WEBHOOK =====
+// ===== WEBHOOK FROM TRADINGVIEW =====
 app.post(`/bot${TELEGRAM_TOKEN}`, async (req, res) => {
     const body = req.body;
 
@@ -67,6 +69,7 @@ app.post(`/bot${TELEGRAM_TOKEN}`, async (req, res) => {
     res.sendStatus(200);
 });
 
+// ===== ROOT CHECK =====
 app.get("/", (req, res) => {
     res.send("Bot is running 🚀");
 });
