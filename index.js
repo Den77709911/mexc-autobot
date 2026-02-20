@@ -9,52 +9,51 @@ app.use(express.json());
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const MEXC_API_KEY = process.env.MEXC_API_KEY;
 const MEXC_SECRET_KEY = process.env.MEXC_SECRET_KEY;
+const CHAT_ID = process.env.CHAT_ID;
 
 const bot = new TelegramBot(TELEGRAM_TOKEN);
 
-// ====== TELEGRAM MESSAGE ======
+// ===== TELEGRAM SEND =====
 async function sendTelegram(text) {
+    if (!CHAT_ID) return;
     try {
-        const chatId = process.env.CHAT_ID;
-        if (!chatId) return;
-        await bot.sendMessage(chatId, text);
+        await bot.sendMessage(CHAT_ID, text);
     } catch (err) {
         console.log("Telegram error:", err.message);
     }
 }
 
-// ====== OPEN LONG FUNCTION ======
+// ===== OPEN LONG =====
 async function openLong(symbol) {
     try {
         const timestamp = Date.now();
-        const quantity = 10; // 10 USDT фиксировано
+        const quantity = 1;
 
-        const params = symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
+        const query = symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp};
+
         const signature = crypto
             .createHmac("sha256", MEXC_SECRET_KEY)
-            .update(params)
+            .update(query)
             .digest("hex");
 
-        const url = https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature};
+        const url = https://contract.mexc.com/api/v1/private/order/submit?${query}&signature=${signature};
 
-        const response = await axios.post(url, {}, {
+        await axios.post(url, {}, {
             headers: {
                 "X-MEXC-APIKEY": MEXC_API_KEY
             }
         });
 
-        await sendTelegram(`✅ LONG открыт: ${symbol}`);
-        console.log("Order success:", response.data);
+        await sendTelegram("✅ LONG открыт: " + symbol);
 
     } catch (err) {
-        console.log("Order error:", err.response?.data || err.message);
+        console.log(err.response?.data || err.message);
         await sendTelegram("❌ Ошибка открытия сделки");
     }
 }
 
-// ====== WEBHOOK FROM TRADINGVIEW ======
+// ===== WEBHOOK =====
 app.post(`/bot${TELEGRAM_TOKEN}`, async (req, res) => {
-
     const body = req.body;
 
     if (body.action === "open" && body.side === "long") {
@@ -62,18 +61,17 @@ app.post(`/bot${TELEGRAM_TOKEN}`, async (req, res) => {
     }
 
     if (body.action === "close") {
-        await sendTelegram(`🔴 Закрытие сигнала: ${body.symbol}`);
+        await sendTelegram("🔴 Закрытие сигнала: " + body.symbol);
     }
 
     res.sendStatus(200);
 });
 
-// ====== ROOT CHECK ======
 app.get("/", (req, res) => {
-    res.send("MEXC Autobot is running 🚀");
+    res.send("Bot is running 🚀");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log("Server running on port " + PORT);
 });
