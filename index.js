@@ -30,14 +30,14 @@ async function openLong(symbol) {
         const quantity = 1; // 1 контракт для теста
 
         // ВАЖНО — здесь правильные обратные кавычки  
-        const params = 'symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp}';
+        const params = `symbol=${symbol}&side=BUY&type=MARKET&quantity=${quantity}&timestamp=${timestamp}`;
 
         const signature = crypto
             .createHmac("sha256", MEXC_SECRET_KEY)
             .update(params)
             .digest("hex");
 
-        const url = 'https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature}';
+        const url = `https://contract.mexc.com/api/v1/private/order/submit?${params}&signature=${signature}`;
 
         const response = await axios.post(url, {}, {
             headers: {
